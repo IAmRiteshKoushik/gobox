@@ -1,0 +1,20 @@
+set shell := ["zsh", "-cu"]
+
+database_url := "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+memcached_addr := "localhost:11211"
+api_base_url := "http://localhost:8080"
+
+up:
+	podman compose up -d
+
+wait-db:
+	podman compose exec -T postgres sh -lc 'until pg_isready -U user -d dbname >/dev/null 2>&1; do sleep 1; done'
+
+db-init: wait-db
+	podman compose exec -T postgres psql -U user -d dbname < schema.sql
+
+api:
+	DATABASE_URL='{{database_url}}' MEMCACHED='{{memcached_addr}}' go run .
+
+curl-name id="nm0000102":
+	curl -s '{{api_base_url}}/names/{{id}}'
