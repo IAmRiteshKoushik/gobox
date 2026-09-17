@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Read a server stream safely</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main><header><div class="kicker">Lesson 0004 · 30 minutes</div><h1>Read a server stream safely</h1><p class="lede">A server-streaming RPC begins like a unary call, then returns a stream. Each received message is ordered. The terminal read tells you whether the stream ended normally or failed.</p><p><a href="0003-outgoing-metadata.html">Lesson 0003</a> · <a href="https://grpc.io/docs/languages/go/basics/">official Go tutorial</a> · <a href="../reference/go-grpc-client-card.html">client card</a></p></header>
+<h2>Change the contract</h2><p>Add this RPC to <code>GreeterService</code>:</p><pre>rpc GreetMany(GreetRequest) returns (stream GreetResponse);</pre><p>Run <code>just generate</code>. The generated client method will return a stream client instead of a <code>*GreetResponse</code>.</p>
+<h2>The client state machine</h2><div class="card"><pre>stream, err := client.GreetMany(ctx, request)
+                  │
+                  ▼
+              Recv() ── message ──► use it, then Recv again
+                  │
+                  ├── io.EOF ─────► normal end of stream
+                  │
+                  └── other error ► status-coded failure</pre></div><p>Do not treat <code>io.EOF</code> as a failure. It says the server completed the sequence normally. A non-EOF error may be a gRPC status error, network failure, deadline, or cancellation.</p>
+<h2>Server task</h2><p>Implement <code>GreetMany</code> so it sends three replies. Use the generated server-stream type. Send these messages in order:</p><pre>Hello Ritesh #1
+Hello Ritesh #2
+Hello Ritesh #3</pre><p>Before each send, check <code>stream.Context().Err()</code>. If it is non-nil, return that error. This is the streaming equivalent of observing <code>ctx.Done()</code>.</p>
+<h2>Client task</h2><p>Call <code>GreetMany</code> with the same deadline and metadata setup you already have. Loop over <code>stream.Recv()</code>. Print every response. Break only on <code>io.EOF</code>; return all other errors.</p>
+<h2>Predict the result</h2><table><thead><tr><th>Server sends</th><th>Client calls</th><th>Expected outcome</th></tr></thead><tbody><tr><td>Three replies, then returns nil</td><td><code>Recv()</code> four times</td><td>Three responses, then <code>io.EOF</code>.</td></tr><tr><td>Stops after one reply with <code>status.Error(codes.Unavailable, ...)</code></td><td><code>Recv()</code> again</td><td>The second receive returns a status-coded error.</td></tr><tr><td>Waits beyond the client deadline</td><td><code>Recv()</code> while waiting</td><td>A deadline error. The stream context is cancelled at the server.</td></tr></tbody></table>
+<h2>Retrieval check</h2><p>What does <code>io.EOF</code> mean when returned from <code>Recv()</code>?</p><label for="eof">Type one word</label><input id="eof" autocomplete="off" placeholder="complete"><button type="button" onclick="checkEOF()">Check</button><p id="eof-result" class="feedback" aria-live="polite"></p>
+<footer><p>Do not add a client-streaming or bidirectional method today. One well-understood server stream gives you the mechanics you need to read a stream in a work codebase. Ask me for the exact server and client implementations after adding the RPC and regenerating.</p></footer></main><script>function checkEOF(){const v=document.getElementById('eof').value.trim().toLowerCase();const e=document.getElementById('eof-result');const ok=v==='complete'||v==='completed'||v==='success';e.textContent=ok?'Correct. EOF is normal completion for this receive loop.':'EOF means the server completed the stream normally.';e.className='feedback '+(ok?'good':'bad')}</script></body></html>

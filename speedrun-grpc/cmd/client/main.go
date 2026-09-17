@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -32,6 +33,10 @@ func run() error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
+
+	ctx = metadata.NewOutgoingContext(
+		ctx, metadata.Pairs("x-request-id", "practice-001"),
+	)
 
 	response, err := client.Greet(ctx, &greetingv1.GreetRequest{
 		Name: "Ritesh",
