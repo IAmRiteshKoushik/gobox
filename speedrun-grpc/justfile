@@ -1,0 +1,16 @@
+# Run the Go program
+run:
+  @go run main.go
+
+# Regenerate protobuf messages and gRPC stubs from the API contract.
+generate:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  grpc_bin="$(mise exec -- go env GOPATH)/bin"
+  export PATH="${grpc_bin}:${PATH}"
+  protoc \
+    --go_out=. \
+    --go_opt=module=github.com/IAmRiteshKoushik/speedrun-grpc \
+    --go-grpc_out=. \
+    --go-grpc_opt=module=github.com/IAmRiteshKoushik/speedrun-grpc \
+    proto/greeting/v1/greeting.proto

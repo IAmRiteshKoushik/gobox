@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Go gRPC client card</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main><header><div class="kicker">Reference card</div><h1>Go gRPC client, under pressure</h1><p class="lede">Read the contract. Reuse the connection. Bound every call. Classify every error.</p></header>
+<h2>Read this first</h2><pre>service Catalog {
+  rpc GetBook(GetBookRequest) returns (Book);
+}</pre><p>The generator gives you a constructor similar to <code>catalogpb.NewCatalogClient(conn)</code> and a method similar to <code>GetBook(ctx, request)</code>. Do not edit generated files.</p>
+<h2>The ordinary unary call</h2><pre>conn, err := grpc.NewClient(target,
+    grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+)
+if err != nil { return fmt.Errorf("create gRPC client: %w", err) }
+defer conn.Close()
+
+client := catalogpb.NewCatalogClient(conn)
+ctx, cancel := context.WithTimeout(parent, 800*time.Millisecond)
+defer cancel()
+
+book, err := client.GetBook(ctx, &catalogpb.GetBookRequest{Id: id})
+if err != nil {
+    switch status.Code(err) {
+    case codes.NotFound:
+        // Map to the caller's domain result.
+    case codes.DeadlineExceeded, codes.Unavailable:
+        // Apply the service's approved retry or fallback policy.
+    default:
+        // Preserve the error, method, and safe request identifiers in logs.
+    }
+}</pre><p><code>grpc.NewClient</code> creates a virtual client connection and does no I/O itself. An RPC causes connection work as needed. Create it once per long-lived component, not once per request. Use the repository's credential and lifecycle pattern. <a href="https://pkg.go.dev/google.golang.org/grpc#NewClient">API reference</a></p>
+<h2>Failure triage</h2><table><thead><tr><th>What you see</th><th>First question</th><th>Next move</th></tr></thead><tbody><tr><td>Compile error</td><td>Is the generated package/import current?</td><td>Find the repo's generation command. Never patch generated Go.</td></tr><tr><td><code>Unauthenticated</code></td><td>Which credentials or outgoing metadata does this service require?</td><td>Copy the established client pattern, then verify key names and TLS.</td></tr><tr><td><code>DeadlineExceeded</code></td><td>Did our time budget expire, or did the server need longer?</td><td>Check method latency and budget. Do not blindly increase it.</td></tr><tr><td><code>Unavailable</code></td><td>Could the endpoint, TLS, DNS, proxy, or server be down?</td><td>Inspect transport logs and service health. Retry only if the operation is safe.</td></tr><tr><td><code>NotFound</code></td><td>Does absence belong in the normal domain result?</td><td>Map it deliberately, rather than treating every non-OK status alike.</td></tr></tbody></table>
+<h2>Metadata</h2><pre>md := metadata.Pairs("x-request-id", requestID)
+ctx = metadata.NewOutgoingContext(ctx, md)
+reply, err := client.GetBook(ctx, req)</pre><p>Metadata is request context, not a replacement for fields that define the business request. Use exact keys and auth helpers already established by your service.</p>
+<footer>Sources: <a href="https://grpc.io/docs/languages/go/basics/">gRPC-Go basics</a>, <a href="https://grpc.io/docs/guides/deadlines/">deadlines</a>, <a href="https://grpc.io/docs/guides/status-codes/">status codes</a>.</footer></main></body></html>

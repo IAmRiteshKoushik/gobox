@@ -1,0 +1,27 @@
+:root { color-scheme: light; --ink:#17202a; --muted:#5b6570; --paper:#fbfaf7; --panel:#f0f4f5; --line:#d8e0e2; --accent:#075e6b; --warm:#9f4b16; --code:#17232d; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.55 Georgia, 'Times New Roman', serif; }
+main { max-width:900px; margin:0 auto; padding:54px 28px 80px; }
+header { border-top:7px solid var(--accent); padding-top:24px; }
+h1,h2,h3,button { font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
+h1 { font-size:clamp(2rem,5vw,3.7rem); line-height:1.04; margin:.2rem 0 .65rem; letter-spacing:-.045em; }
+h2 { font-size:1.35rem; margin:2.5rem 0 .6rem; }
+h3 { font-size:1rem; margin:1.2rem 0 .35rem; }
+p,li { max-width:74ch; }
+a { color:var(--accent); text-underline-offset:3px; }
+.kicker { font:700 .76rem/1.2 Inter,ui-sans-serif,sans-serif; text-transform:uppercase; letter-spacing:.14em; color:var(--warm); }
+.lede { color:var(--muted); font-size:1.18rem; }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:20px 22px; margin:1.2rem 0; }
+code,pre { font-family:'SFMono-Regular',Consolas,monospace; font-size:.88em; }
+pre { overflow:auto; padding:17px; background:var(--code); color:#eef5f7; border-radius:7px; line-height:1.48; }
+table { width:100%; border-collapse:collapse; font-family:Inter,ui-sans-serif,sans-serif; font-size:.9rem; margin:1rem 0; }
+th,td { text-align:left; vertical-align:top; padding:.7rem .5rem; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; }
+label { display:block; font-family:Inter,ui-sans-serif,sans-serif; font-weight:650; margin-top:1rem; }
+input { width:min(100%,460px); padding:.65rem; font:inherit; border:1px solid #9da9ad; border-radius:5px; background:#fff; }
+button { margin-top:.65rem; padding:.55rem .9rem; color:#fff; background:var(--accent); border:0; border-radius:5px; font-weight:700; cursor:pointer; }
+.feedback { min-height:1.5em; font-family:Inter,ui-sans-serif,sans-serif; font-size:.9rem; font-weight:650; }
+.good { color:#146b3a; } .bad { color:#a23022; }
+.callout { border-left:4px solid var(--warm); padding:.15rem 0 .15rem 1rem; }
+footer { border-top:1px solid var(--line); margin-top:4rem; padding-top:1.2rem; color:var(--muted); font-size:.9rem; }
+@media print { body { background:#fff; } main { max-width:none; padding:18px; } a { color:inherit; } }

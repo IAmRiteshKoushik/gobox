@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package greetingv1;
+
+option go_package = "github.com/IAmRiteshKoushik/speedrun-grpc/gen/greeting/v1;greetingv1";
+
+service GreeterService {
+  rpc Greet(GreetRequest) returns (GreetResponse);
+}
+
+message GreetRequest {
+  string name = 1;
+}
+
+message GreetResponse {
+  string message = 1;
+}
