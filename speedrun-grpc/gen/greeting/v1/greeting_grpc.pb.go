@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GreeterService_Greet_FullMethodName = "/greetingv1.GreeterService/Greet"
+	GreeterService_Greet_FullMethodName     = "/greetingv1.GreeterService/Greet"
+	GreeterService_GreetMany_FullMethodName = "/greetingv1.GreeterService/GreetMany"
 )
 
 // GreeterServiceClient is the client API for GreeterService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GreeterServiceClient interface {
 	Greet(ctx context.Context, in *GreetRequest, opts ...grpc.CallOption) (*GreetResponse, error)
+	GreetMany(ctx context.Context, in *GreetRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GreetResponse], error)
 }
 
 type greeterServiceClient struct {
@@ -47,11 +49,31 @@ func (c *greeterServiceClient) Greet(ctx context.Context, in *GreetRequest, opts
 	return out, nil
 }
 
+func (c *greeterServiceClient) GreetMany(ctx context.Context, in *GreetRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GreetResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &GreeterService_ServiceDesc.Streams[0], GreeterService_GreetMany_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GreetRequest, GreetResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GreeterService_GreetManyClient = grpc.ServerStreamingClient[GreetResponse]
+
 // GreeterServiceServer is the server API for GreeterService service.
 // All implementations must embed UnimplementedGreeterServiceServer
 // for forward compatibility.
 type GreeterServiceServer interface {
 	Greet(context.Context, *GreetRequest) (*GreetResponse, error)
+	GreetMany(*GreetRequest, grpc.ServerStreamingServer[GreetResponse]) error
 	mustEmbedUnimplementedGreeterServiceServer()
 }
 
@@ -64,6 +86,9 @@ type UnimplementedGreeterServiceServer struct{}
 
 func (UnimplementedGreeterServiceServer) Greet(context.Context, *GreetRequest) (*GreetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Greet not implemented")
+}
+func (UnimplementedGreeterServiceServer) GreetMany(*GreetRequest, grpc.ServerStreamingServer[GreetResponse]) error {
+	return status.Error(codes.Unimplemented, "method GreetMany not implemented")
 }
 func (UnimplementedGreeterServiceServer) mustEmbedUnimplementedGreeterServiceServer() {}
 func (UnimplementedGreeterServiceServer) testEmbeddedByValue()                        {}
@@ -104,6 +129,17 @@ func _GreeterService_Greet_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GreeterService_GreetMany_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GreetRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GreeterServiceServer).GreetMany(m, &grpc.GenericServerStream[GreetRequest, GreetResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GreeterService_GreetManyServer = grpc.ServerStreamingServer[GreetResponse]
+
 // GreeterService_ServiceDesc is the grpc.ServiceDesc for GreeterService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +152,12 @@ var GreeterService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GreeterService_Greet_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GreetMany",
+			Handler:       _GreeterService_GreetMany_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/greeting/v1/greeting.proto",
 }

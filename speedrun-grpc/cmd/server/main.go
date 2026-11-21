@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
+	"time"
 
 	greetingv1 "github.com/IAmRiteshKoushik/speedrun-grpc/gen/greeting/v1"
 	"google.golang.org/grpc"
@@ -39,6 +41,35 @@ func (greetingServer) Greet(ctx context.Context, request *greetingv1.GreetReques
 	return &greetingv1.GreetResponse{
 		Message: "Hello " + request.GetName(),
 	}, nil
+}
+
+func (greetingServer) GreetMany(request *greetingv1.GreetRequest, stream grpc.ServerStreamingServer[greetingv1.GreetResponse]) error {
+	requestIDs := metadata.ValueFromIncomingContext(stream.Context(), "x-request-id")
+	if len(requestIDs) == 0 || requestIDs[0] == "" {
+		return status.Error(codes.InvalidArgument, "x-request-id is required")
+	}
+	log.Printf("GreetMany request ID: %s", requestIDs[0])
+
+	for i := range 3 {
+		select {
+		case <-time.After(750 * time.Millisecond):
+		// Do nothing in this switch-case and move out
+		case <-stream.Context().Done():
+			return stream.Context().Err()
+		}
+
+		if i == 1 {
+			return status.Error(codes.Unavailable, "simulated stream interruption")
+		}
+
+		if err := stream.Send(&greetingv1.GreetResponse{
+			Message: fmt.Sprintf("Hello %s #%d", request.GetName(), i+1),
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func main() {

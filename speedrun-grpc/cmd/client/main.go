@@ -6,12 +6,9 @@ import (
 	"log"
 	"time"
 
-	greetingv1 "github.com/IAmRiteshKoushik/speedrun-grpc/gen/greeting/v1"
+	"github.com/IAmRiteshKoushik/speedrun-grpc/internal/greetingclient"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
 const target = "localhost:50051"
@@ -29,29 +26,19 @@ func run() error {
 	}
 	defer conn.Close()
 
-	client := greetingv1.NewGreeterServiceClient(conn)
+	client := greetingclient.New(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	ctx = metadata.NewOutgoingContext(
-		ctx, metadata.Pairs("x-request-id", "practice-001"),
-	)
-
-	response, err := client.Greet(ctx, &greetingv1.GreetRequest{
-		Name: "Ritesh",
-	})
+	messages, err := client.GreetMany(ctx, "Ritesh", "practice-001")
 	if err != nil {
-		switch status.Code(err) {
-		case codes.Unavailable:
-			return fmt.Errorf("Greet failed: code=%s, server may not be reachable: %w", status.Code(err), err)
-		case codes.DeadlineExceeded:
-			return fmt.Errorf("Greet failed: code=%s, call exceeded its two-second budget: %w", status.Code(err), err)
-		default:
-			return fmt.Errorf("Greet failed: code=%s: %w", status.Code(err), err)
-		}
+		return fmt.Errorf("greet many: %w", err)
 	}
 
-	fmt.Println(response.GetMessage())
+	for _, message := range messages {
+		fmt.Println(message)
+	}
+
 	return nil
 }

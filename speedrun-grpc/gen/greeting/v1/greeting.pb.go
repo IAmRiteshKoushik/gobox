@@ -118,9 +118,10 @@ const file_proto_greeting_v1_greeting_proto_rawDesc = "" +
 	"\fGreetRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\")\n" +
 	"\rGreetResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2N\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage2\x92\x01\n" +
 	"\x0eGreeterService\x12<\n" +
-	"\x05Greet\x12\x18.greetingv1.GreetRequest\x1a\x19.greetingv1.GreetResponseBFZDgithub.com/IAmRiteshKoushik/speedrun-grpc/gen/greeting/v1;greetingv1b\x06proto3"
+	"\x05Greet\x12\x18.greetingv1.GreetRequest\x1a\x19.greetingv1.GreetResponse\x12B\n" +
+	"\tGreetMany\x12\x18.greetingv1.GreetRequest\x1a\x19.greetingv1.GreetResponse0\x01BFZDgithub.com/IAmRiteshKoushik/speedrun-grpc/gen/greeting/v1;greetingv1b\x06proto3"
 
 var (
 	file_proto_greeting_v1_greeting_proto_rawDescOnce sync.Once
@@ -141,9 +142,11 @@ var file_proto_greeting_v1_greeting_proto_goTypes = []any{
 }
 var file_proto_greeting_v1_greeting_proto_depIdxs = []int32{
 	0, // 0: greetingv1.GreeterService.Greet:input_type -> greetingv1.GreetRequest
-	1, // 1: greetingv1.GreeterService.Greet:output_type -> greetingv1.GreetResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 1: greetingv1.GreeterService.GreetMany:input_type -> greetingv1.GreetRequest
+	1, // 2: greetingv1.GreeterService.Greet:output_type -> greetingv1.GreetResponse
+	1, // 3: greetingv1.GreeterService.GreetMany:output_type -> greetingv1.GreetResponse
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

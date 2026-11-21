@@ -6,6 +6,7 @@ option go_package = "github.com/IAmRiteshKoushik/speedrun-grpc/gen/greeting/v1;g
 
 service GreeterService {
   rpc Greet(GreetRequest) returns (GreetResponse);
+  rpc GreetMany(GreetRequest) returns (stream GreetResponse);
 }
 
 message GreetRequest {

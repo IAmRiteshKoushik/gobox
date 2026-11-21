@@ -14,3 +14,9 @@ generate:
     --go-grpc_out=. \
     --go-grpc_opt=module=github.com/IAmRiteshKoushik/speedrun-grpc \
     proto/greeting/v1/greeting.proto
+
+client:
+  @go run ./cmd/client
+
+server:
+  @go run ./cmd/server
